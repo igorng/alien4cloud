@@ -11,10 +11,10 @@ imports:
 
 node_types:
 
-  alien.nodes.PublicNetwork:
+  alien.nodes.mock.PublicNetwork:
     abstract: true
     derived_from: tosca.nodes.Network
 
-  alien.nodes.PrivateNetwork:
+  alien.nodes.mock.PrivateNetwork:
     abstract: true
     derived_from: tosca.nodes.Network

@@ -7,9 +7,17 @@ Background:
   And I create an orchestrator named "Mount doom orchestrator" and plugin id "alien4cloud-mock-paas-provider:1.0" and bean name "mock-orchestrator-factory"
   And I enable the orchestrator "Mount doom orchestrator"
   
-Scenario: Check the portability info are well injected when importing the location archive
+Scenario: Check the portability info are well injected when importing the orchestrator or location archive
   When I create a location named "Thark location" and infrastructure type "OpenStack" to the orchestrator "Mount doom orchestrator"
   Then I should receive a RestResponse with no error
+  
+  ## orchestrator archive
+  When I try to get a component with id "alien.nodes.mock.PublicNetwork:1.0"
+  Then I should receive a RestResponse with no error
+  And the node type component should have tho folowing portability informations:
+  	|orchestrators| Mock Orchestrator|  
+  
+  ## location archive
   When I try to get a component with id "alien.nodes.mock.openstack.Image:1.0"
   Then I should receive a RestResponse with no error
   And the node type component should have tho folowing portability informations:
@@ -22,5 +30,9 @@ Scenario: Check the portability info are well injected when importing the locati
   And the node type component should have tho folowing portability informations:
   	|iaaSs| OpenStack|
   	|orchestrators|Mock Orchestrator,Mock|
+  	
+ 
+  	
+ 
 
 
