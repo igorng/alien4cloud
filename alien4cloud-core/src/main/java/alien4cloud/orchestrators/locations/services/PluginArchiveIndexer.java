@@ -1,23 +1,5 @@
 package alien4cloud.orchestrators.locations.services;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.Resource;
-import javax.inject.Inject;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.springframework.stereotype.Component;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.csar.services.CsarService;
 import alien4cloud.dao.IGenericSearchDAO;
@@ -25,7 +7,11 @@ import alien4cloud.model.common.Tag;
 import alien4cloud.model.common.Usage;
 import alien4cloud.model.components.CSARDependency;
 import alien4cloud.model.components.Csar;
+import alien4cloud.model.components.IndexedNodeType;
 import alien4cloud.model.components.IndexedToscaElement;
+import alien4cloud.model.components.ListPropertyValue;
+import alien4cloud.model.components.portability.NodeTypePortability;
+import alien4cloud.model.components.portability.PortabilityProperty;
 import alien4cloud.model.orchestrators.Orchestrator;
 import alien4cloud.model.orchestrators.locations.Location;
 import alien4cloud.orchestrators.plugin.ILocationConfiguratorPlugin;
@@ -38,14 +24,29 @@ import alien4cloud.paas.exception.OrchestratorDisabledException;
 import alien4cloud.tosca.ArchiveIndexer;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingError;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.Resource;
+import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.springframework.stereotype.Component;
 
 /**
  * Manage the indexing of TOSCA archives.
  */
 @Slf4j
 @Component
-public class LocationArchiveIndexer {
+@SuppressWarnings("rawtypes")
+public class PluginArchiveIndexer {
     @Inject
     private OrchestratorService orchestratorService;
     @Inject
@@ -58,12 +59,12 @@ public class LocationArchiveIndexer {
     private IGenericSearchDAO alienDAO;
 
     /**
-     * Ensure that plugin archives are indexed, note that by default the archives visibility is not public.
+     * Ensure that location archives are indexed, note that by default the archives visibility is not public.
      *
      * @param orchestrator the orchestrator for which to index archives.
      * @param location The location of the orchestrator for which to index archives.
      */
-    public Set<CSARDependency> indexArchives(Orchestrator orchestrator, Location location) {
+    public Set<CSARDependency> indexLocationArchives(Orchestrator orchestrator, Location location) {
         IOrchestratorPlugin orchestratorInstance = (IOrchestratorPlugin) orchestratorPluginService.getOrFail(orchestrator.getId());
         ILocationConfiguratorPlugin configuratorPlugin = orchestratorInstance.getConfigurator(location.getInfrastructureType());
 
@@ -79,6 +80,8 @@ public class LocationArchiveIndexer {
         for (PluginArchive pluginArchive : pluginArchives) {
             ArchiveRoot archive = pluginArchive.getArchive();
             Csar csar = csarService.getIfExists(archive.getArchive().getName(), archive.getArchive().getVersion());
+
+            // TODO Do we really want to check this? as we might not be able to override location snapshot archives!
             if (csar == null) {
                 // index the required archive
                 indexArchive(pluginArchive, orchestrator, location);
@@ -96,6 +99,19 @@ public class LocationArchiveIndexer {
         return dependencies;
     }
 
+    public void indexOrchestratorArchives(IOrchestratorPluginFactory<IOrchestratorPlugin<?>, ?> orchestratorFactory) {
+        try {
+            IOrchestratorPlugin<?> orchestratorInstance = orchestratorFactory.newInstance();
+            for (PluginArchive pluginArchive : orchestratorInstance.pluginArchives()) {
+                injectPortabilityInfos(pluginArchive.getArchive().getNodeTypes().values(), orchestratorFactory, null);
+                List<ParsingError> parsingErrors = Lists.newArrayList();
+                archiveIndexer.importArchive(pluginArchive.getArchive(), pluginArchive.getArchiveFilePath(), parsingErrors);
+            }
+        } catch (CSARVersionAlreadyExistsException e) {
+            log.info("Skipping orchestrator archive import as the released version already exists in the repository.");
+        }
+    }
+
     private void indexArchive(PluginArchive pluginArchive, Orchestrator orchestrator, Location location) {
         ArchiveRoot archive = pluginArchive.getArchive();
 
@@ -105,6 +121,9 @@ public class LocationArchiveIndexer {
         injectWorkSpace(archive.getCapabilityTypes().values(), orchestrator, location);
         injectWorkSpace(archive.getRelationshipTypes().values(), orchestrator, location);
 
+        // inject portability informations
+        injectPortabilityInfos(archive.getNodeTypes().values(), orchestrator, location);
+
         List<ParsingError> parsingErrors = Lists.newArrayList();
 
         // index the archive in alien catalog
@@ -113,6 +132,49 @@ public class LocationArchiveIndexer {
         } catch (CSARVersionAlreadyExistsException e) {
             log.info("Skipping location archive import as the released version already exists in the repository.");
         }
+    }
+
+    private void injectPortabilityInfos(Collection<IndexedNodeType> collection, Orchestrator orchestrator, Location location) {
+        IOrchestratorPluginFactory orchestratorFactory = orchestratorService.getPluginFactory(orchestrator);
+        injectPortabilityInfos(collection, orchestratorFactory, location);
+    }
+
+    private void injectPortabilityInfos(Collection<IndexedNodeType> collection, IOrchestratorPluginFactory orchestratorFactory, Location location) {
+        if (CollectionUtils.isNotEmpty(collection)) {
+            for (IndexedNodeType nodeType : collection) {
+                addOchestratorAndLocationInfo(nodeType, orchestratorFactory, location);
+            }
+        }
+    }
+
+    private void addOchestratorAndLocationInfo(IndexedNodeType nodeType, IOrchestratorPluginFactory orchestratorFactory, Location location) {
+        NodeTypePortability nodeTypePortability = (NodeTypePortability) nodeType.getPortability();
+
+        if (nodeTypePortability == null) {
+            nodeTypePortability = new NodeTypePortability();
+            nodeType.setPortability(nodeTypePortability);
+        }
+
+        PortabilityProperty orchestrators = addInPortabilityProperty(orchestratorFactory.getType(), nodeTypePortability.getOrchestrators());
+        nodeTypePortability.setOrchestrators(orchestrators);
+
+        if (location != null) {
+            PortabilityProperty iaaSs = addInPortabilityProperty(location.getInfrastructureType(), nodeTypePortability.getIaaSs());
+            nodeTypePortability.setIaaSs(iaaSs);
+        }
+
+    }
+
+    private PortabilityProperty addInPortabilityProperty(Object infoToAdd, PortabilityProperty portabilityProperty) {
+        if (portabilityProperty == null) {
+            portabilityProperty = new PortabilityProperty();
+        }
+        ListPropertyValue propertyValue = portabilityProperty.getValue() != null ? (ListPropertyValue) portabilityProperty.getValue()
+                : new ListPropertyValue(Lists.newArrayList());
+        propertyValue.getValue().add(infoToAdd);
+        alien4cloud.utils.CollectionUtils.ensureUnitictyOfValues(propertyValue.getValue());
+        portabilityProperty.setValue(propertyValue);
+        return portabilityProperty;
     }
 
     private void injectWorkSpace(Collection<? extends IndexedToscaElement> elements, Orchestrator orchestrator, Location location) {

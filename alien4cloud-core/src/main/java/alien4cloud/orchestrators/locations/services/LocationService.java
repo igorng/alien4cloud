@@ -58,7 +58,7 @@ public class LocationService {
     @Inject
     private OrchestratorService orchestratorService;
     @Inject
-    private LocationArchiveIndexer locationArchiveIndexer;
+    private PluginArchiveIndexer locationArchiveIndexer;
     @Inject
     private LocationResourceService locationResourceService;
     @Resource
@@ -111,7 +111,7 @@ public class LocationService {
 
         // TODO add User and Group managed by the Orchestrator security
 
-        Set<CSARDependency> dependencies = locationArchiveIndexer.indexArchives(orchestrator, location);
+        Set<CSARDependency> dependencies = locationArchiveIndexer.indexLocationArchives(orchestrator, location);
         location.setDependencies(dependencies);
 
         //initialize meta properties

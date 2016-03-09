@@ -1,13 +1,5 @@
 package alien4cloud.plugin.mock;
 
-import java.util.Arrays;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.stereotype.Component;
-
 import alien4cloud.model.components.PropertyConstraint;
 import alien4cloud.model.components.PropertyDefinition;
 import alien4cloud.model.components.constraints.GreaterOrEqualConstraint;
@@ -16,9 +8,13 @@ import alien4cloud.model.orchestrators.ArtifactSupport;
 import alien4cloud.model.orchestrators.locations.LocationSupport;
 import alien4cloud.orchestrators.plugin.IOrchestratorPluginFactory;
 import alien4cloud.tosca.normative.ToscaType;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.Arrays;
+import java.util.Map;
+import javax.annotation.Resource;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Factory for Mock implementation of orchestrator instance.
@@ -99,5 +95,10 @@ public class MockOrchestratorFactory implements IOrchestratorPluginFactory<MockO
         deploymentProperties.put("managerEmail", managerEmail);
 
         return deploymentProperties;
+    }
+
+    @Override
+    public String getType() {
+        return "Mock Orchestrator";
     }
 }

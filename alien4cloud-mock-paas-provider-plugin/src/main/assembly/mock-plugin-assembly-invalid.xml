@@ -15,7 +15,8 @@
 			<excludes>
 				<exclude>META-INF/**</exclude>
 				<exclude>openstack/mock-resources/mock-resources.yaml</exclude>
-				<exclude>openstack/mock-openstack-resources/openstack-resources.yaml</exclude>				
+				<exclude>openstack/mock-openstack-resources/openstack-resources.yaml</exclude>
+				<exclude>common/**</exclude>				
 			</excludes>
 		</fileSet>
 	</fileSets>
@@ -32,6 +33,12 @@
       		<outputDirectory>openstack/mock-openstack-resources</outputDirectory>
       		<destName>openstack-resources.yaml</destName>
 		</file>	
+		<file>
+			<source>${basedir}/src/main/resources/common/orchestrator-types.yml</source>
+      		<filtered>true</filtered>
+      		<outputDirectory>common</outputDirectory>
+      		<destName>orchestrator-types.yml</destName>
+		</file>
 	</files>
 	<dependencySets>
 		<dependencySet>

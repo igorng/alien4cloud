@@ -1,10 +1,9 @@
 package alien4cloud.orchestrators.plugin;
 
-import java.util.Map;
-
 import alien4cloud.model.components.PropertyDefinition;
 import alien4cloud.model.orchestrators.ArtifactSupport;
 import alien4cloud.model.orchestrators.locations.LocationSupport;
+import java.util.Map;
 
 /**
  * Implementation of these class are responsible for providing the common settings for an orchestrators and creating instances responsible for orchestrators
@@ -63,4 +62,11 @@ public interface IOrchestratorPluginFactory<T extends IOrchestratorPlugin<V>, V>
      * @return A map containing property definitions
      */
     Map<String, PropertyDefinition> getDeploymentPropertyDefinitions();
+
+    /**
+     * Get the type of orchestrator this factory provides. ex: cloudify3
+     * 
+     * @return
+     */
+    String getType();
 }

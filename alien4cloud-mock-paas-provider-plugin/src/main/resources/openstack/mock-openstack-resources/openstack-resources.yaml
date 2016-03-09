@@ -29,9 +29,12 @@ node_types:
     capabilities:
       host:
         type: tosca.capabilities.Container
-        
+    portability:
+      orchestrators: [Mock]
+      iaaSs: [ OpenStack ]
+
+
 artefact_types:
   alien.artefacts.mock.Implementation.Bash:
     description: Mock artefact for sh
     derived_from: tosca.artifacts.Implementation.Bash
-  

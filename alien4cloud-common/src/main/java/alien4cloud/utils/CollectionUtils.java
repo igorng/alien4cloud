@@ -1,13 +1,12 @@
 package alien4cloud.utils;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public final class CollectionUtils {
     private CollectionUtils() {
@@ -83,5 +82,17 @@ public final class CollectionUtils {
         }
 
         return merged;
+    }
+
+    /**
+     * Ensure that the values within the list are unique
+     * 
+     * @param value
+     * @return a new List
+     */
+    public static void ensureUnitictyOfValues(List<Object> value) {
+        Set<Object> set = Sets.newHashSet(value);
+        value.clear();
+        value.addAll(set);
     }
 }

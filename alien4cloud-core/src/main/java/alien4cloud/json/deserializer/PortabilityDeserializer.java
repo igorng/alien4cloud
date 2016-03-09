@@ -14,6 +14,6 @@ public class PortabilityDeserializer extends AbstractDiscriminatorPolymorphicDes
 
     public PortabilityDeserializer() {
         super(AbstractPortability.class);
-        addToRegistry("iaaS", NodeTypePortability.class);
+        addToRegistry("iaaSs", NodeTypePortability.class);
     }
 }

@@ -1,17 +1,5 @@
 package alien4cloud.plugin.mock;
 
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
 import alien4cloud.deployment.matching.services.nodes.MatchingConfigurations;
 import alien4cloud.deployment.matching.services.nodes.MatchingConfigurationsParser;
 import alien4cloud.model.deployment.matching.MatchingConfiguration;
@@ -25,13 +13,17 @@ import alien4cloud.orchestrators.plugin.model.PluginArchive;
 import alien4cloud.paas.exception.PluginParseException;
 import alien4cloud.plugin.PluginManager;
 import alien4cloud.plugin.model.ManagedPlugin;
-import alien4cloud.tosca.ArchiveParser;
-import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
-import alien4cloud.tosca.parser.ParsingResult;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import javax.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Configure resources for the openstack location type.
@@ -41,7 +33,7 @@ import com.google.common.collect.Maps;
 @Scope("prototype")
 public class MockOpenStackLocationConfigurer implements ILocationConfiguratorPlugin {
     @Inject
-    private ArchiveParser archiveParser;
+    private MockArchiveParser mockArchiveParser;
     @Inject
     private MatchingConfigurationsParser matchingConfigurationsParser;
     @Inject
@@ -60,28 +52,13 @@ public class MockOpenStackLocationConfigurer implements ILocationConfiguratorPlu
     public List<PluginArchive> pluginArchives() throws PluginParseException {
         if (archives == null) {
             try {
-                archives = parseArchives();
+                archives = mockArchiveParser.parseArchives("openstack/mock-openstack-resources", "openstack/mock-resources");
             } catch (ParsingException e) {
                 log.error(e.getMessage());
-                throw  new PluginParseException(e.getMessage());
+                throw new PluginParseException(e.getMessage());
             }
         }
         return archives;
-    }
-
-    private List<PluginArchive> parseArchives() throws ParsingException {
-        List<PluginArchive> archives = Lists.newArrayList();
-        addToAchive(archives, "openstack/mock-openstack-resources");
-        addToAchive(archives, "openstack/mock-resources");
-        return archives;
-    }
-
-    private void addToAchive(List<PluginArchive> archives, String path) throws ParsingException {
-        Path archivePath = selfContext.getPluginPath().resolve(path);
-        // Parse the archives
-        ParsingResult<ArchiveRoot> result = archiveParser.parseDir(archivePath);
-        PluginArchive pluginArchive = new PluginArchive(result.getResult(), archivePath);
-        archives.add(pluginArchive);
     }
 
     @Override
