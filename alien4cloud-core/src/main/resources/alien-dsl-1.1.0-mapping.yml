@@ -25,7 +25,6 @@
 - sustitution_mapping_parser: alien4cloud.tosca.parser.impl.advanced.SustitutionMappingParser
 - constraint: alien4cloud.tosca.parser.impl.advanced.ConstraintParser
 - abstract_property_value: alien4cloud.tosca.parser.impl.advanced.AbstractPropertyValueParser
-- portability_property: alien4cloud.tosca.parser.impl.advanced.PortabilityPropertyParser
 
 # declare standard mapping based parsers
 - definition: alien4cloud.tosca.model.ArchiveRoot
@@ -304,19 +303,8 @@
     sequence_to_map: artifacts
     type: deployment_artifact
   portability:
-    reference: portability
-    type: portability_definition
-
-- portability_definition: __discriminator
-  default:  node_type_portability
-
-- node_type_portability: alien4cloud.model.components.portability.NodeTypePortability
-  iaaSs:
-    reference: iaaSs
-    type: portability_property
-  orchestrators:
-    reference: orchestrators
-    type: portability_property
+    map: portability
+    type: node_template_property
 
 - data_type: alien4cloud.model.components.IndexedDataType|toscaElementChecker
   description: description

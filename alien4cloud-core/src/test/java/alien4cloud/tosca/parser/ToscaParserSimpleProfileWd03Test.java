@@ -14,7 +14,6 @@ import alien4cloud.model.components.IndexedCapabilityType;
 import alien4cloud.model.components.IndexedNodeType;
 import alien4cloud.model.components.IndexedRelationshipType;
 import alien4cloud.model.components.Interface;
-import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.NodeFilter;
 import alien4cloud.model.components.Operation;
 import alien4cloud.model.components.PropertyConstraint;
@@ -25,7 +24,6 @@ import alien4cloud.model.components.constraints.GreaterThanConstraint;
 import alien4cloud.model.components.constraints.LessThanConstraint;
 import alien4cloud.model.components.constraints.MaxLengthConstraint;
 import alien4cloud.model.components.constraints.MinLengthConstraint;
-import alien4cloud.model.components.portability.NodeTypePortability;
 import alien4cloud.paas.plan.ToscaNodeLifecycleConstants;
 import alien4cloud.rest.utils.JsonUtil;
 import alien4cloud.tosca.ArchiveParserTest;
@@ -610,23 +608,6 @@ public class ToscaParserSimpleProfileWd03Test {
         Assert.assertEquals(3, parsingResult.getResult().getDataTypes().size());
         Assert.assertEquals(1, parsingResult.getResult().getNodeTypes().size());
         Assert.assertEquals(0, parsingResult.getContext().getParsingErrors().size());
-    }
-
-    @Test
-    public void testPortabilityDefinition() throws ParsingException {
-        ParsingResult<ArchiveRoot> parsingResult = parser.parseFile(Paths.get("src/test/resources/alien/tosca/parsing", "tosca-node-type-portability.yml"));
-        ArchiveParserTest.displayErrors(parsingResult);
-        IndexedNodeType nodeType = parsingResult.getResult().getNodeTypes().values().iterator().next();
-        Assert.assertNotNull(nodeType);
-        Assert.assertNotNull(nodeType.getPortability());
-        Assert.assertTrue(nodeType.getPortability() instanceof NodeTypePortability);
-        NodeTypePortability portability = (NodeTypePortability) nodeType.getPortability();
-        Assert.assertNotNull(portability.getIaaSs());
-        Assert.assertNotNull(portability.getIaaSs().getValue());
-        Assert.assertNotNull(portability.getOrchestrators());
-        Assert.assertNotNull(portability.getOrchestrators().getValue());
-        Assert.assertTrue(portability.getIaaSs().getValue() instanceof ListPropertyValue);
-        Assert.assertTrue(portability.getOrchestrators().getValue() instanceof ScalarPropertyValue);
     }
 
     public static int countErrorByLevelAndCode(ParsingResult<?> parsingResult, ParsingErrorLevel errorLevel, ErrorCode errorCode) {

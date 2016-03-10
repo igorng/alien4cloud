@@ -1,11 +1,5 @@
 package alien4cloud.json.deserializer;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
-import java.util.Map;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -15,6 +9,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Manages polymorphism deserialization for Jackson through discriminator field (based on field exists).
@@ -40,6 +39,10 @@ public class AbstractDiscriminatorPolymorphicDeserializer<T> extends StdDeserial
         registryForDiscriminator.put(discriminatorNodeType, clazz);
     }
 
+    protected void removeFromRegistry(String discriminator) {
+        registry.remove(discriminator);
+    }
+
     /**
      * Define the class to use to be used for parsing in case the value is a string and not an object.
      * 
@@ -59,8 +62,9 @@ public class AbstractDiscriminatorPolymorphicDeserializer<T> extends StdDeserial
                 Constructor constructor = this.valueStringClass.getConstructor(String.class);
                 return (T) constructor.newInstance(parameter);
             } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-                throw new JsonParseException("Failed to create instance of <" + this.valueStringClass.getName() + "> from constructor using string parameter <"
-                        + parameter + ">", jp.getCurrentLocation(), e);
+                throw new JsonParseException(
+                        "Failed to create instance of <" + this.valueStringClass.getName() + "> from constructor using string parameter <" + parameter + ">",
+                        jp.getCurrentLocation(), e);
             }
         }
         ObjectNode root = mapper.readTree(jp);

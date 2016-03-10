@@ -10,8 +10,8 @@ import alien4cloud.model.components.Csar;
 import alien4cloud.model.components.IndexedNodeType;
 import alien4cloud.model.components.IndexedToscaElement;
 import alien4cloud.model.components.ListPropertyValue;
-import alien4cloud.model.components.portability.NodeTypePortability;
-import alien4cloud.model.components.portability.PortabilityProperty;
+import alien4cloud.model.components.PropertyValue;
+import alien4cloud.model.components.portability.PortabilityPropertyEnum;
 import alien4cloud.model.orchestrators.Orchestrator;
 import alien4cloud.model.orchestrators.locations.Location;
 import alien4cloud.orchestrators.plugin.ILocationConfiguratorPlugin;
@@ -148,33 +148,22 @@ public class PluginArchiveIndexer {
     }
 
     private void addOchestratorAndLocationInfo(IndexedNodeType nodeType, IOrchestratorPluginFactory orchestratorFactory, Location location) {
-        NodeTypePortability nodeTypePortability = (NodeTypePortability) nodeType.getPortability();
-
-        if (nodeTypePortability == null) {
-            nodeTypePortability = new NodeTypePortability();
-            nodeType.setPortability(nodeTypePortability);
+        if (nodeType.getPortability() == null) {
+            nodeType.setPortability(Maps.<String, PropertyValue<?>> newHashMap());
         }
-
-        PortabilityProperty orchestrators = addInPortabilityProperty(orchestratorFactory.getType(), nodeTypePortability.getOrchestrators());
-        nodeTypePortability.setOrchestrators(orchestrators);
+        addInPortabilityProperty(nodeType.getPortability(), PortabilityPropertyEnum.ORCHESTRATORS_KEY, orchestratorFactory.getType());
 
         if (location != null) {
-            PortabilityProperty iaaSs = addInPortabilityProperty(location.getInfrastructureType(), nodeTypePortability.getIaaSs());
-            nodeTypePortability.setIaaSs(iaaSs);
+            addInPortabilityProperty(nodeType.getPortability(), PortabilityPropertyEnum.IAASS_KEY, location.getInfrastructureType());
         }
-
     }
 
-    private PortabilityProperty addInPortabilityProperty(Object infoToAdd, PortabilityProperty portabilityProperty) {
-        if (portabilityProperty == null) {
-            portabilityProperty = new PortabilityProperty();
-        }
-        ListPropertyValue propertyValue = portabilityProperty.getValue() != null ? (ListPropertyValue) portabilityProperty.getValue()
+    private void addInPortabilityProperty(Map<String, PropertyValue<?>> portabilityMap, String portabilityKey, Object infoToAdd) {
+        ListPropertyValue propertyValue = portabilityMap.get(portabilityKey) != null ? (ListPropertyValue) portabilityMap.get(portabilityKey)
                 : new ListPropertyValue(Lists.newArrayList());
         propertyValue.getValue().add(infoToAdd);
         alien4cloud.utils.CollectionUtils.ensureUnitictyOfValues(propertyValue.getValue());
-        portabilityProperty.setValue(propertyValue);
-        return portabilityProperty;
+        portabilityMap.put(portabilityKey, propertyValue);
     }
 
     private void injectWorkSpace(Collection<? extends IndexedToscaElement> elements, Orchestrator orchestrator, Location location) {

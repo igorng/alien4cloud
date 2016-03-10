@@ -25,7 +25,6 @@
 - sustitution_mapping_parser: alien4cloud.tosca.parser.impl.advanced.SustitutionMappingParser
 - constraint: alien4cloud.tosca.parser.impl.advanced.ConstraintParser
 - abstract_property_value: alien4cloud.tosca.parser.impl.advanced.AbstractPropertyValueParser
-- portability_property: alien4cloud.tosca.parser.impl.advanced.PortabilityPropertyParser
 
 # declare standard mapping based parsers
 - definition: alien4cloud.tosca.model.ArchiveRoot
@@ -74,7 +73,7 @@
   input_artifacts:
     map: inputArtifacts
     type: template_deployment_artifact
-  substitution_mappings: 
+  substitution_mappings:
     reference: substitutionMapping
     type: sustitution_mapping_parser
   node_templates:
@@ -109,19 +108,19 @@
   on-success:
     set: followingSteps
     type: scalar
-    
+
 - workflow_activity: __discriminator
   keys:
     set_state: set_state_activity
     call_operation: call_operation_activity
     delegate: delegate_activity
-  
+
 - set_state_activity: alien4cloud.paas.wf.SetStateActivity
   set_state: stateName
-  
+
 - call_operation_activity: alien4cloud.paas.wf.OperationCallActivity
   call_operation: operationFqn
-  
+
 - delegate_activity: alien4cloud.paas.wf.DelegateWorkflowActivity
   delegate: workflowName
 
@@ -344,19 +343,8 @@
     reference: tags
     type: tag
   portability:
-    reference: portability
-    type: portability_definition
-
-- portability_definition: __discriminator
-  default:  node_type_portability
-
-- node_type_portability: alien4cloud.model.components.portability.NodeTypePortability
-  iaaSs:
-    reference: iaaSs
-    type: portability_property
-  orchestrators:
-    reference: orchestrators
-    type: portability_property
+    map: portability
+    type: node_template_property
 
 - data_type: alien4cloud.model.components.IndexedDataType|toscaElementChecker
   description: description

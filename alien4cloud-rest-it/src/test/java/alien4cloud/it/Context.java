@@ -33,7 +33,7 @@ import alien4cloud.it.provider.util.AwsClient;
 import alien4cloud.it.provider.util.OpenStackClient;
 import alien4cloud.json.deserializer.AttributeDeserializer;
 import alien4cloud.json.deserializer.PropertyConstraintDeserializer;
-import alien4cloud.json.deserializer.PropertyValueDeserializer;
+import alien4cloud.json.deserializer.AllPropertyValueDeserializer;
 import alien4cloud.json.deserializer.TaskDeserializer;
 import alien4cloud.json.deserializer.TaskIndexedInheritableToscaElementDeserializer;
 import alien4cloud.model.application.Application;
@@ -144,7 +144,7 @@ public class Context {
         if (JSON_MAPPER == null) {
             JSON_MAPPER = new RestMapper();
             SimpleModule module = new SimpleModule("PropDeser", new Version(1, 0, 0, null, null, null));
-            module.addDeserializer(AbstractPropertyValue.class, new PropertyValueDeserializer());
+            module.addDeserializer(AbstractPropertyValue.class, new AllPropertyValueDeserializer());
             module.addDeserializer(IValue.class, new AttributeDeserializer());
             try {
                 module.addDeserializer(PropertyConstraint.class, new PropertyConstraintDeserializer());

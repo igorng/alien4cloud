@@ -1,7 +1,7 @@
 package alien4cloud.model.components.portability;
 
 public enum PortabilityPropertyEnum {
-    IAAS("iaaS");
+    IAASS("iaaSs"), ORCHESTRATORS("orchestrators");
 
     private String name;
 
@@ -13,5 +13,8 @@ public enum PortabilityPropertyEnum {
     public String toString() {
         return name;
     }
+
+    public static String IAASS_KEY = IAASS.name;
+    public static String ORCHESTRATORS_KEY = ORCHESTRATORS.name;
 
 }
