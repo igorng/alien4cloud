@@ -1,5 +1,6 @@
 package alien4cloud.orchestrators.locations.services;
 
+import alien4cloud.component.portability.PortabilityPropertyEnum;
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.csar.services.CsarService;
 import alien4cloud.dao.IGenericSearchDAO;
@@ -11,7 +12,6 @@ import alien4cloud.model.components.IndexedNodeType;
 import alien4cloud.model.components.IndexedToscaElement;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyValue;
-import alien4cloud.model.components.portability.PortabilityPropertyEnum;
 import alien4cloud.model.orchestrators.Orchestrator;
 import alien4cloud.model.orchestrators.locations.Location;
 import alien4cloud.orchestrators.plugin.ILocationConfiguratorPlugin;

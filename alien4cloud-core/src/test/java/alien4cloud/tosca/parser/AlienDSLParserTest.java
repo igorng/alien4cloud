@@ -1,9 +1,9 @@
 package alien4cloud.tosca.parser;
 
+import alien4cloud.component.portability.PortabilityPropertyEnum;
 import alien4cloud.model.components.IndexedNodeType;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyValue;
-import alien4cloud.model.components.portability.PortabilityPropertyEnum;
 import alien4cloud.tosca.ArchiveParserTest;
 import alien4cloud.tosca.model.ArchiveRoot;
 import java.nio.file.Paths;

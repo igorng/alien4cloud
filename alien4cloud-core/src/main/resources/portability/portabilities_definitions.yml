@@ -1,0 +1,26 @@
+
+properties:
+  IAASS:
+    description: >
+      Specific IaaSs to which the component is related.
+    type: list
+    entry_schema:
+      type: string
+  ORCHESTRATORS:
+    description: >
+      Specific orchestrators to which the component is related.
+    type: list
+    entry_schema:
+      type: string
+  SUPPORTED_ARTIFACTS:
+    description: >
+      Artifacts supported by the component
+    type: list
+    entry_schema:
+      type: string
+  RUNTIME_PACKAGES:
+    description: >
+      Installed packages on a compute / runtime requirements for a component
+    type: list
+    entry_schema:
+      type: string
