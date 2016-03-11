@@ -1,0 +1,17 @@
+
+properties:
+  first:
+    type: string
+    default: default_first
+    required: true
+    constraints:
+      valid_values: [default_first, default_first1, default_first2]
+  second:
+    type: list
+    entry_schema:
+      type: string
+    default: [second_default_1, second_default_2]
+  third:
+    type: map
+    entry_schema:
+      type: integer

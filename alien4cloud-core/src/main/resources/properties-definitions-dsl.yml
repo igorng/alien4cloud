@@ -1,0 +1,19 @@
+# Mapping definition for properties definition
+- constraint: alien4cloud.tosca.parser.impl.advanced.ConstraintParser
+
+- properties: alien4cloud.common.ParsedPropertiesDefinitions
+  properties:
+    map: definitions
+    type: property_definition
+
+- property_definition: alien4cloud.model.components.PropertyDefinition|propertyDefinitionChecker
+  type: type
+  entry_schema:
+    reference: entrySchema
+    type: property_definition
+  required: required
+  description: description
+  default: default
+  constraints:
+    list: constraints
+    type: constraint
