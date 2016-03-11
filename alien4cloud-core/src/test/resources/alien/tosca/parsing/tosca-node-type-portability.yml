@@ -7,3 +7,4 @@ node_types:
       iaaSs: [ "amazon", "openstack"]
       orchestrators:
         - cloudify3
+      supported_artifacts: [sh, bat]
