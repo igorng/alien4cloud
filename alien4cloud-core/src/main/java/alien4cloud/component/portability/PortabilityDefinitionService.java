@@ -4,15 +4,19 @@ import alien4cloud.common.ParsedPropertiesDefinitions;
 import alien4cloud.common.parser.PropertiesDefinitionYamlParser;
 import alien4cloud.exception.NotFoundException;
 import alien4cloud.model.components.PropertyDefinition;
+import alien4cloud.tosca.parser.ParsingError;
 import alien4cloud.tosca.parser.ParsingException;
-import java.nio.file.Paths;
+import alien4cloud.tosca.parser.impl.ErrorCode;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.collect.Maps;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,19 +27,29 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class PortabilityDefinitionService {
 
+    @Resource
+    private ApplicationContext applicationContext;
     @Inject
     private PropertiesDefinitionYamlParser parser;
 
     @Getter
     private Map<PortabilityPropertyEnum, PropertyDefinition> portabilityDefinitions;
 
-    private static final String PORTABILITY_PROPERTIES_FILE_PATH = "src/main/resources/portability/portabilities_definitions.yml";
+    private static final String PORTABILITY_PROPERTIES_FILE_PATH = "portability/portabilities_definitions.yml";
 
     @PostConstruct
     public void init() throws ParsingException {
         // load the portability properties definitions
-        ParsedPropertiesDefinitions parsed = parser.parseFile(Paths.get(PORTABILITY_PROPERTIES_FILE_PATH)).getResult();
-        portabilityDefinitions = keysFromStringToEnum(parsed.getDefinitions());
+        org.springframework.core.io.Resource resource = applicationContext.getResource(PORTABILITY_PROPERTIES_FILE_PATH);
+        try {
+            ParsedPropertiesDefinitions parsed = parser.parseFile(resource.getURI().toString(), resource.getFilename(), resource.getInputStream(), null)
+                    .getResult();
+            portabilityDefinitions = keysFromStringToEnum(parsed.getDefinitions());
+        } catch (IOException e) {
+            log.error("Failed to open stream", e);
+            throw new ParsingException(resource.getFilename(),
+                    new ParsingError(ErrorCode.MISSING_FILE, "Unable to load file.", null, e.getMessage(), null, PORTABILITY_PROPERTIES_FILE_PATH));
+        }
     }
 
     /**

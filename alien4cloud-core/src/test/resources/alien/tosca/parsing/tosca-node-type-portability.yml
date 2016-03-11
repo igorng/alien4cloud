@@ -4,7 +4,7 @@ node_types:
   alien.nodes.PortabilityTestNode:
     description: Test component for portability parsing
     portability:
-      iaaSs: [ "amazon", "openstack"]
-      orchestrators:
+      IAASS: [ "amazon", "openstack"]
+      ORCHESTRATORS:
         - cloudify3
-      supported_artifacts: [sh, bat]
+      SUPPORTED_ARTIFACTS: [sh, bat]
