@@ -8,7 +8,11 @@ import javax.inject.Inject;
 import org.springframework.stereotype.Service;
 
 import alien4cloud.exception.InvalidArgumentException;
-import alien4cloud.model.components.*;
+import alien4cloud.model.components.AbstractPropertyValue;
+import alien4cloud.model.components.ComplexPropertyValue;
+import alien4cloud.model.components.ListPropertyValue;
+import alien4cloud.model.components.PropertyDefinition;
+import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.properties.constraints.exception.ConstraintValueDoNotMatchPropertyTypeException;
@@ -81,4 +85,13 @@ public class PropertyService {
         }
         setPropertyValue(capability.getProperties(), propertyDefinition, propertyName, propertyValue);
     }
+
+    public void setPortabilityValue(NodeTemplate nodeTemplate, PropertyDefinition propertyDefinition, String propertyName, Object propertyValue)
+            throws ConstraintValueDoNotMatchPropertyTypeException, ConstraintViolationException {
+        if (nodeTemplate.getPortability() == null) {
+            nodeTemplate.setPortability(Maps.<String, AbstractPropertyValue> newHashMap());
+        }
+        setPropertyValue(nodeTemplate.getPortability(), propertyDefinition, propertyName, propertyValue);
+    }
+
 }

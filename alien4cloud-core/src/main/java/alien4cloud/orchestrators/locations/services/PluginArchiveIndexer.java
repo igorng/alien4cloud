@@ -1,17 +1,33 @@
 package alien4cloud.orchestrators.locations.services;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Resource;
+import javax.inject.Inject;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.springframework.stereotype.Component;
+
 import alien4cloud.component.portability.PortabilityPropertyEnum;
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.csar.services.CsarService;
 import alien4cloud.dao.IGenericSearchDAO;
 import alien4cloud.model.common.Tag;
 import alien4cloud.model.common.Usage;
+import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.CSARDependency;
 import alien4cloud.model.components.Csar;
 import alien4cloud.model.components.IndexedNodeType;
 import alien4cloud.model.components.IndexedToscaElement;
 import alien4cloud.model.components.ListPropertyValue;
-import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.orchestrators.Orchestrator;
 import alien4cloud.model.orchestrators.locations.Location;
 import alien4cloud.orchestrators.plugin.ILocationConfiguratorPlugin;
@@ -24,21 +40,10 @@ import alien4cloud.paas.exception.OrchestratorDisabledException;
 import alien4cloud.tosca.ArchiveIndexer;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingError;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.springframework.stereotype.Component;
 
 /**
  * Manage the indexing of TOSCA archives.
@@ -149,7 +154,7 @@ public class PluginArchiveIndexer {
 
     private void addOchestratorAndLocationInfo(IndexedNodeType nodeType, IOrchestratorPluginFactory orchestratorFactory, Location location) {
         if (nodeType.getPortability() == null) {
-            nodeType.setPortability(Maps.<String, PropertyValue<?>> newHashMap());
+            nodeType.setPortability(Maps.<String, AbstractPropertyValue> newHashMap());
         }
         addInPortabilityProperty(nodeType.getPortability(), PortabilityPropertyEnum.ORCHESTRATORS_KEY, orchestratorFactory.getType());
 
@@ -158,7 +163,7 @@ public class PluginArchiveIndexer {
         }
     }
 
-    private void addInPortabilityProperty(Map<String, PropertyValue<?>> portabilityMap, String portabilityKey, Object infoToAdd) {
+    private void addInPortabilityProperty(Map<String, AbstractPropertyValue> portabilityMap, String portabilityKey, Object infoToAdd) {
         ListPropertyValue propertyValue = portabilityMap.get(portabilityKey) != null ? (ListPropertyValue) portabilityMap.get(portabilityKey)
                 : new ListPropertyValue(Lists.newArrayList());
         propertyValue.getValue().add(infoToAdd);

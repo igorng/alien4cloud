@@ -3,20 +3,24 @@ package alien4cloud.model.components;
 import static alien4cloud.dao.model.FetchContext.QUICK_SEARCH;
 import static alien4cloud.dao.model.FetchContext.TAG_SUGGESTION;
 
-import alien4cloud.json.deserializer.PropertyValueDeserializer;
-import alien4cloud.utils.jackson.ConditionalAttributes;
-import alien4cloud.utils.jackson.ConditionalOnAttribute;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Map;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+
 import org.elasticsearch.annotation.ESObject;
 import org.elasticsearch.annotation.NumberField;
 import org.elasticsearch.annotation.query.FetchContext;
 import org.elasticsearch.annotation.query.TermsFacet;
 import org.elasticsearch.mapping.IndexType;
+
+import alien4cloud.json.deserializer.PropertyValueDeserializer;
+import alien4cloud.utils.jackson.ConditionalAttributes;
+import alien4cloud.utils.jackson.ConditionalOnAttribute;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @Getter
 @Setter
@@ -52,5 +56,5 @@ public class IndexedNodeType extends IndexedArtifactToscaElement {
     @ConditionalOnAttribute(ConditionalAttributes.REST)
     @JsonDeserialize(contentUsing = PropertyValueDeserializer.class)
     // @JsonSerialize(using = JSonMapEntryArraySerializer.class)
-    private Map<String, PropertyValue<?>> portability;
+    private Map<String, AbstractPropertyValue> portability;
 }

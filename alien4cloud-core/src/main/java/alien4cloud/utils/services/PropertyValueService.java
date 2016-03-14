@@ -3,6 +3,8 @@ package alien4cloud.utils.services;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import alien4cloud.exception.InvalidArgumentException;

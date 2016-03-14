@@ -2,19 +2,23 @@ package alien4cloud.it.components;
 
 import static org.junit.Assert.assertNotNull;
 
-import alien4cloud.it.Context;
-import alien4cloud.model.components.IndexedNodeType;
-import alien4cloud.model.components.ListPropertyValue;
-import alien4cloud.model.components.PropertyValue;
-import alien4cloud.rest.model.RestResponse;
-import alien4cloud.rest.utils.JsonUtil;
-import com.google.common.base.Splitter;
-import cucumber.api.java.en.Then;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.junit.Assert;
+
+import alien4cloud.it.Context;
+import alien4cloud.model.components.AbstractPropertyValue;
+import alien4cloud.model.components.IndexedNodeType;
+import alien4cloud.model.components.ListPropertyValue;
+import alien4cloud.rest.model.RestResponse;
+import alien4cloud.rest.utils.JsonUtil;
+
+import com.google.common.base.Splitter;
+
+import cucumber.api.java.en.Then;
 
 public class PortabilityDefinitionSteps {
     @Then("^the node type component should have tho folowing portability informations:$")
@@ -23,7 +27,7 @@ public class PortabilityDefinitionSteps {
         RestResponse<IndexedNodeType> response = JsonUtil.read(Context.getInstance().getRestResponse(), IndexedNodeType.class, Context.getJsonMapper());
         assertNotNull(response.getData());
         assertNotNull(response.getData().getPortability());
-        Map<String, PropertyValue<?>> portability = response.getData().getPortability();
+        Map<String, AbstractPropertyValue> portability = response.getData().getPortability();
 
         for (Entry<String, String> entry : expectedPortabilityInfos.entrySet()) {
             List<String> expectedValues = Splitter.on(",").splitToList(entry.getValue());

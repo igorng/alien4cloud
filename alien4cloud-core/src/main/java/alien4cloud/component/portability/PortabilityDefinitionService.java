@@ -1,5 +1,20 @@
 package alien4cloud.component.portability;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.inject.Inject;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import org.elasticsearch.common.collect.Maps;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+
 import alien4cloud.common.ParsedPropertiesDefinitions;
 import alien4cloud.common.parser.PropertiesDefinitionYamlParser;
 import alien4cloud.exception.NotFoundException;
@@ -7,17 +22,6 @@ import alien4cloud.model.components.PropertyDefinition;
 import alien4cloud.tosca.parser.ParsingError;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.impl.ErrorCode;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Map.Entry;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.collect.Maps;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 /**
  * A {@link PropertyDefinition} store for portability indicators.
@@ -35,7 +39,7 @@ public class PortabilityDefinitionService {
     @Getter
     private Map<PortabilityPropertyEnum, PropertyDefinition> portabilityDefinitions;
 
-    private static final String PORTABILITY_PROPERTIES_FILE_PATH = "portability/portabilities_definitions.yml";
+    private static final String PORTABILITY_PROPERTIES_FILE_PATH = "classpath:portability/portabilities_definitions.yml";
 
     @PostConstruct
     public void init() throws ParsingException {
@@ -73,6 +77,21 @@ public class PortabilityDefinitionService {
             }
         }
         return toReturn;
+    }
+
+    /**
+     * TODO: this should be filtered by the context. For example:
+     * - a location resource node template should only allow those comming from type (readonly)
+     * - a location compute node template should allow RUNTIME_PACKAGES for edition.
+     * 
+     * @return
+     */
+    public Map<String, PropertyDefinition> getAvailablePortabilityDefinitions(/* Here something to express the context ..? */) {
+        Map<String, PropertyDefinition> result = Maps.newHashMap();
+        for (Entry<PortabilityPropertyEnum, PropertyDefinition> e : portabilityDefinitions.entrySet()) {
+            result.put(e.getKey().toString(), e.getValue());
+        }
+        return result;
     }
 
 }

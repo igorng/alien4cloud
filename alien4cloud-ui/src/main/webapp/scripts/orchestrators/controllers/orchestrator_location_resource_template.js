@@ -67,5 +67,18 @@ define(function(require) {
           }
         });
       };
+      
+      $scope.updatePortabilityProperty = function(propertyName, propertyValue) {
+        var updatePromise = $scope.onPortabilityPropertyUpdate({
+          propertyName: propertyName,
+          propertyValue: propertyValue
+        });
+        return updatePromise.then(function(response) {
+          if (_.undefined(response.error)) { // update was performed on server side - impact js data.
+            $scope.resourceTemplate.template.portability[propertyName] = propertyValue;
+          }
+          return response; // dispatch response to property display
+        });
+      };      
     }]);
 });

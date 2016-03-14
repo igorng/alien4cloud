@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,9 +18,11 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.stereotype.Component;
 
 import alien4cloud.component.ICSARRepositorySearchService;
+import alien4cloud.component.portability.PortabilityDefinitionService;
 import alien4cloud.dao.IGenericSearchDAO;
 import alien4cloud.dao.model.GetMultipleDataResult;
 import alien4cloud.exception.NotFoundException;
+import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.CSARDependency;
 import alien4cloud.model.components.CapabilityDefinition;
 import alien4cloud.model.components.IndexedCapabilityType;
@@ -69,6 +72,8 @@ public class LocationResourceService {
     private OrchestratorPluginService orchestratorPluginService;
     @Resource
     private PropertyService propertyService;
+    @Inject
+    private PortabilityDefinitionService portabilityDefinitionService;
 
     /**
      * Get the list of resources definitions for a given orchestrator.
@@ -214,6 +219,20 @@ public class LocationResourceService {
         if (result.getData() == null) {
             return Lists.newArrayList();
         }
+        for (LocationResourceTemplate locationResourceTemplate : result.getData()) {
+            // TODO: should be filtered by context
+            Map<String, PropertyDefinition> compatibilityDefinitions = portabilityDefinitionService.getAvailablePortabilityDefinitions();
+            locationResourceTemplate.setPortabilityDefinitions(compatibilityDefinitions);
+            for (Entry<String, PropertyDefinition> cde : compatibilityDefinitions.entrySet()) {
+                if (locationResourceTemplate.getTemplate().getPortability() == null) {
+                    Map<String, AbstractPropertyValue> values = Maps.newHashMap();
+                    locationResourceTemplate.getTemplate().setPortability(values);
+                }
+                if (!locationResourceTemplate.getTemplate().getPortability().containsKey(cde.getKey())) {
+                    locationResourceTemplate.getTemplate().getPortability().put(cde.getKey(), null);
+                }
+            }
+        }
         return Lists.newArrayList(result.getData());
     }
 
@@ -285,6 +304,18 @@ public class LocationResourceService {
             throw new NotFoundException("Property <" + propertyName + "> is not found in type <" + resourceType.getElementId() + ">");
         }
         propertyService.setPropertyValue(resourceTemplate.getTemplate(), resourceType.getProperties().get(propertyName), propertyName, propertyValue);
+        saveResource(resourceTemplate);
+    }
+
+    public void setTemplatePortablity(String resourceId, String propertyName, Object propertyValue) throws ConstraintValueDoNotMatchPropertyTypeException,
+            ConstraintViolationException {
+        LocationResourceTemplate resourceTemplate = getOrFail(resourceId);
+        // here find the type
+        PropertyDefinition portabilityDefinition = portabilityDefinitionService.getPropertyDefinition(propertyName);
+        if (portabilityDefinition == null) {
+            throw new NotFoundException("Portability <" + propertyName + "> is not found in portability definition");
+        }
+        propertyService.setPortabilityValue(resourceTemplate.getTemplate(), portabilityDefinition, propertyName, propertyValue);
         saveResource(resourceTemplate);
     }
 
