@@ -13,6 +13,9 @@ define(function (require) {
     $scope.searchService = searchServiceFactory('rest/latest/components/search', false, $scope, 20, 10);
     $scope.searchService.filtered(true);
 
+    var orchestratorTermId = 'portability.ORCHESTRATORS.value';
+    var iaasSTermId = 'portability.IAASS.value';
+
     /** Used to display the correct text in UI */
     $scope.getFormatedFacetValue = function(term, value) {
       // Add other boolean term facet in the condition
@@ -37,7 +40,7 @@ define(function (require) {
     };
 
     /** Used to send the correct request to ES */
-    function getFormatedFacetId(term, facetId) {
+    function getFormatedFacetIdForES(term, facetId) {
       // Add other boolean term facet in the condition
       if (term === 'abstract') {
         if (facetId === 'F') {
@@ -47,6 +50,17 @@ define(function (require) {
         }
       } else {
         return facetId;
+      }
+    }
+
+    function addFacetFilter(termId, facetId) {
+      // Test if the filter exists : [term:facet] and add it if not
+      if (_.undefined(_.find($scope.facetFilters, {term: termId, facet:facetId}))) {
+        var facetSearchObject = {};
+        facetSearchObject.term = termId;
+        facetSearchObject.facet = [];
+        facetSearchObject.facet.push(getFormatedFacetIdForES(termId, facetId));
+        $scope.facetFilters.push(facetSearchObject);
       }
     }
 
@@ -65,6 +79,10 @@ define(function (require) {
       $scope.query = '';
       $scope.facetFilters = [];
     }
+
+    // add orchestrator and iaass filter
+    addFacetFilter(orchestratorTermId, null);
+    addFacetFilter(iaasSTermId, null);
 
     /*update a search*/
     function updateSearch(filters) {
@@ -130,13 +148,7 @@ define(function (require) {
     /* Add a facet Filters*/
     $scope.addFilter = function(termId, facetId) {
       // Test if the filter exists : [term:facet] and add it if not
-      if (_.undefined(_.find($scope.facetFilters, {term: termId, facet:facetId}))) {
-        var facetSearchObject = {};
-        facetSearchObject.term = termId;
-        facetSearchObject.facet = [];
-        facetSearchObject.facet.push(getFormatedFacetId(termId, facetId));
-        $scope.facetFilters.push(facetSearchObject);
-      }
+      addFacetFilter(termId, facetId);
 
       // Search update with new filters list
       $scope.doSearch();
