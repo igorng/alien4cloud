@@ -16,14 +16,23 @@ define(function (require) {
     /** Used to display the correct text in UI */
     $scope.getFormatedFacetValue = function(term, value) {
       // Add other boolean term facet in the condition
-      if (term === 'abstract') {
-        if (value === 'F' || value[0] === false) {
-          return $filter('translate')('FALSE');
+      if(_.isArray(value) ){
+        //process each value of the array
+        return _.transform(value, function(result, n){
+          result.push($scope.getFormatedFacetValue(term, n));
+        }, []);
+      }else{
+        if (term === 'abstract') {
+          if (value === 'F' || value === false) {
+            return $filter('translate')('FALSE');
+          } else {
+            return $filter('translate')('TRUE');
+          }
+        } else if ( _.undefined(value)){
+          return $filter('translate')('N/A');
         } else {
-          return $filter('translate')('TRUE');
+          return value;
         }
-      } else {
-        return value;
       }
     };
 
@@ -118,20 +127,10 @@ define(function (require) {
       }
     };
 
-    // Getting full search result from /data folder
-
     /* Add a facet Filters*/
     $scope.addFilter = function(termId, facetId) {
-
-      // Test if the filter exists : [term:facet]
-      var termIndex = -1;
-      for (var i = 0, len = $scope.facetFilters.length; i < len; i++) {
-        if ($scope.facetFilters[i].term === termId && $scope.facetFilters[i].facet === facetId) {
-          termIndex = i;
-        }
-      }
-
-      if (termIndex < 0) {
+      // Test if the filter exists : [term:facet] and add it if not
+      if (_.undefined(_.find($scope.facetFilters, {term: termId, facet:facetId}))) {
         var facetSearchObject = {};
         facetSearchObject.term = termId;
         facetSearchObject.facet = [];
@@ -145,14 +144,8 @@ define(function (require) {
 
     /*Remove a facet filter*/
     $scope.removeFilter = function(filterToRemove) {
-
       // Remove the selected filter
-      var index = $scope.facetFilters.indexOf(filterToRemove);
-      if (index >= 0) {
-        $scope.facetFilters.splice(index, 1);
-      }
-
-      // Search update with new filters list
+      _.remove($scope.facetFilters, filterToRemove);
       $scope.doSearch();
     };
 

@@ -30,8 +30,8 @@ node_types:
       host:
         type: tosca.capabilities.Container
     portability:
-      orchestrators: [Mock]
-      iaaSs: [ OpenStack ]
+      ORCHESTRATORS: [Mock]
+      IAASS: [ OpenStack ]
 
 
 artefact_types:
