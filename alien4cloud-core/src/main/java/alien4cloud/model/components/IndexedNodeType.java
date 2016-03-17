@@ -3,8 +3,8 @@ package alien4cloud.model.components;
 import static alien4cloud.dao.model.FetchContext.QUICK_SEARCH;
 import static alien4cloud.dao.model.FetchContext.TAG_SUGGESTION;
 
-import alien4cloud.component.portability.PortabilityPropertyEnum;
-import alien4cloud.json.deserializer.AllPropertyValueDeserializer;
+import alien4cloud.component.portability.ESPortabilityPropertiesPathsGenerator;
+import alien4cloud.json.deserializer.PropertyValueDeserializer;
 import alien4cloud.utils.jackson.ConditionalAttributes;
 import alien4cloud.utils.jackson.ConditionalOnAttribute;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -51,7 +51,7 @@ public class IndexedNodeType extends IndexedArtifactToscaElement {
      */
 
     @ConditionalOnAttribute({ ConditionalAttributes.ES, ConditionalAttributes.REST })
-    @JsonDeserialize(contentUsing = AllPropertyValueDeserializer.class)
-    @TermsFacet(keysEnum = PortabilityPropertyEnum.class, paths = "value")
+    @JsonDeserialize(contentUsing = PropertyValueDeserializer.class)
+    @TermsFacet(pathGenerator = ESPortabilityPropertiesPathsGenerator.class)
     private Map<String, AbstractPropertyValue> portability;
 }

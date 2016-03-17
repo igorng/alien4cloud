@@ -4,7 +4,7 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
-import alien4cloud.json.deserializer.AllPropertyValueDeserializer;
+import alien4cloud.json.deserializer.PropertyValueDeserializer;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.utils.jackson.ConditionalAttributes;
 import alien4cloud.utils.jackson.ConditionalOnAttribute;
@@ -33,7 +33,7 @@ public class Capability {
      * Properties are provided in the form of an XML fragment. The same rules as outlined for the Properties element of the Node Template apply.
      */
     @ConditionalOnAttribute(ConditionalAttributes.REST)
-    @JsonDeserialize(using = JSonMapEntryArrayDeSerializer.class, contentUsing = AllPropertyValueDeserializer.class)
+    @JsonDeserialize(using = JSonMapEntryArrayDeSerializer.class, contentUsing = PropertyValueDeserializer.class)
     @JsonSerialize(using = JSonMapEntryArraySerializer.class)
     private Map<String, AbstractPropertyValue> properties;
 }

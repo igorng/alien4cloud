@@ -4,7 +4,7 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
-import alien4cloud.json.deserializer.AllPropertyValueDeserializer;
+import alien4cloud.json.deserializer.PropertyValueDeserializer;
 import alien4cloud.model.components.AbstractPropertyValue;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -27,6 +27,6 @@ public class Requirement {
      * This element specifies initial values for one or more of the Requirement Properties according to the Requirement Type providing the property definitions.
      * Properties are provided in the form of an XML fragment. The same rules as outlined for the Properties element of the Node Template apply.
      */
-    @JsonDeserialize(contentUsing = AllPropertyValueDeserializer.class)
+    @JsonDeserialize(contentUsing = PropertyValueDeserializer.class)
     private Map<String, AbstractPropertyValue> properties;
 }

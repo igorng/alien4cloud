@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import alien4cloud.json.deserializer.AttributeDeserializer;
-import alien4cloud.json.deserializer.AllPropertyValueDeserializer;
+import alien4cloud.json.deserializer.PropertyValueDeserializer;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.IValue;
@@ -45,7 +45,7 @@ public abstract class AbstractTemplate {
      * Properties of the template
      */
     @ConditionalOnAttribute(ConditionalAttributes.REST)
-    @JsonDeserialize(using = JSonMapEntryArrayDeSerializer.class, contentUsing = AllPropertyValueDeserializer.class)
+    @JsonDeserialize(using = JSonMapEntryArrayDeSerializer.class, contentUsing = PropertyValueDeserializer.class)
     @JsonSerialize(using = JSonMapEntryArraySerializer.class)
     private Map<String, AbstractPropertyValue> properties;
 
