@@ -359,16 +359,20 @@
     },
     "PORTABILITY": {
       "IAASS": {
-        "VALUE": "IaaSs"
+        "LABEL": "IaaSs",
+        "VALUE": "portability: IaaSs"
       },
       "ORCHESTRATORS": {
-        "VALUE": "Orchestrators"
+        "LABEL": "Orchestrators",
+        "VALUE": "Portability: Orchestrators"
       },
       "RUNTIME_PACKAGES": {
-        "VALUE": "Runtime packages"
+        "LABEL": "Runtime packages",
+        "VALUE": "Portability: Runtime packages"
       },
       "SUPPORTED_ARTIFACTS": {
-        "VALUE": "Supported artifacts"
+        "LABEL": "Supported artifacts",
+        "VALUE": "Portability: Supported artifacts"
       }
     },
     "REQUIREMENTS" : {

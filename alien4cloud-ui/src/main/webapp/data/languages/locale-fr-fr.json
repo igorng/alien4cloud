@@ -359,16 +359,20 @@
     },
     "PORTABILITY": {
       "IAASS": {
-        "VALUE": "IaaSs"
+        "LABEL": "IaaSs",
+        "VALUE": "Portabilité: IaaSs"
       },
       "ORCHESTRATORS": {
-        "VALUE": "Orchestrateurs"
+        "LABEL": "Orchestrateurs",
+        "VALUE": "Portabilité: Orchestrateurs"
       },
       "RUNTIME_PACKAGES": {
-        "VALUE": "Packages installés"
+        "LABEL": "Packages installés",
+        "VALUE": "Portabilité: Packages installés"
       },
       "SUPPORTED_ARTIFACTS": {
-        "VALUE": "Artefacts supportés"
+        "LABEL": "Artefacts supportés",
+        "VALUE": "Portabilité: Artefacts supportés"
       }
     },
     "REQUIREMENTS" : {
