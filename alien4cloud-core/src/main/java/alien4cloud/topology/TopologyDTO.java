@@ -1,13 +1,12 @@
 package alien4cloud.topology;
 
-import java.util.Map;
-import java.util.Set;
-
 import alien4cloud.model.components.IndexedCapabilityType;
 import alien4cloud.model.components.IndexedDataType;
 import alien4cloud.model.components.IndexedNodeType;
 import alien4cloud.model.components.IndexedRelationshipType;
 import alien4cloud.model.topology.Topology;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Topology DTO contains the topology and a map of the types used in the topology.

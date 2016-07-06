@@ -1,34 +1,28 @@
 package alien4cloud.tosca;
 
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.Set;
-
-import javax.inject.Inject;
-
-import alien4cloud.model.components.CSARSource;
-import alien4cloud.tosca.context.ToscaContextual;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.stereotype.Component;
-
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.model.components.CSARDependency;
+import alien4cloud.model.components.CSARSource;
 import alien4cloud.model.components.Csar;
 import alien4cloud.model.git.CsarDependenciesBean;
 import alien4cloud.security.AuthorizationUtil;
 import alien4cloud.security.model.Role;
 import alien4cloud.suggestions.services.SuggestionService;
-import alien4cloud.topology.TopologyServiceCore;
+import alien4cloud.topology.TopologySynchService;
 import alien4cloud.topology.TopologyTemplateVersionService;
+import alien4cloud.tosca.context.ToscaContextual;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingContext;
-import alien4cloud.tosca.parser.ParsingError;
 import alien4cloud.tosca.parser.ParsingErrorLevel;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
-
 import com.google.common.collect.Maps;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Set;
+import javax.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
@@ -39,7 +33,7 @@ public class ArchiveUploadService {
     @Inject
     private ArchiveIndexer archiveIndexer;
     @Inject
-    TopologyServiceCore topologyServiceCore;
+    TopologySynchService topologySynchService;
     @Inject
     TopologyTemplateVersionService topologyTemplateVersionService;
     @Inject
@@ -67,7 +61,6 @@ public class ArchiveUploadService {
             AuthorizationUtil.checkHasOneRoleIn(Role.COMPONENTS_MANAGER, Role.ADMIN);
         }
 
-
         // check if any blocker error has been found during parsing process.
         if (parsingResult.hasError(ParsingErrorLevel.ERROR)) {
             // do not save anything if any blocker error has been found during import.
@@ -81,6 +74,11 @@ public class ArchiveUploadService {
         } catch (Exception e) {
             log.error("Could not post process suggestion for the archive", e);
         }
+
+        // resynch topologies if needed
+        // String embededTopologyId = parsingResult.getResult().getTopology() != null ? parsingResult.getResult().getTopology().getId() : null;
+        // topologySynchService.synchTopologiesWith(parsingResult.getResult().getArchive(), embededTopologyId);
+
         return toSimpleResult(parsingResult);
     }
 

@@ -1,29 +1,28 @@
 package alien4cloud.topology.validation;
 
 import alien4cloud.component.CSARRepositorySearchService;
+import alien4cloud.component.IToscaElementFinder;
 import alien4cloud.exception.NotFoundException;
-import alien4cloud.model.components.*;
+import alien4cloud.model.components.CSARDependency;
+import alien4cloud.model.components.IndexedNodeType;
+import alien4cloud.model.components.IndexedToscaElement;
+import alien4cloud.model.components.RequirementDefinition;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.model.topology.Requirement;
 import alien4cloud.model.topology.Topology;
-import alien4cloud.paas.function.FunctionEvaluator;
 import alien4cloud.topology.task.RequirementToSatisfy;
 import alien4cloud.topology.task.RequirementsTask;
 import alien4cloud.topology.task.TaskCode;
-import alien4cloud.tosca.normative.IPropertyType;
-import alien4cloud.tosca.normative.ToscaType;
-import alien4cloud.tosca.properties.constraints.exception.ConstraintValueDoNotMatchPropertyTypeException;
-import alien4cloud.tosca.properties.constraints.exception.ConstraintViolationException;
-import org.apache.commons.collections4.CollectionUtils;
-import org.elasticsearch.common.collect.Lists;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Resource;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.elasticsearch.common.collect.Lists;
+import org.springframework.stereotype.Component;
 
 /**
  * Performs validation of the requirements and capabilities bounds.
@@ -41,15 +40,30 @@ public class TopologyRequirementBoundsValidationServices {
      * @param dependencies the dependencies of the topology
      * @return true if requirement upper bound is reached, false otherwise
      */
-    public boolean isRequirementUpperBoundReachedForSource(NodeTemplate nodeTemplate, String requirementName, Set<CSARDependency> dependencies) {
-        IndexedNodeType relatedIndexedNodeType = csarRepoSearchService.getRequiredElementInDependencies(IndexedNodeType.class, nodeTemplate.getType(),
-                dependencies);
-        Requirement requirement = nodeTemplate.getRequirements().get(requirementName);
+    public boolean isRequirementUpperBoundReachedForSource(NodeTemplate nodeTemplate, String requirementName, final Set<CSARDependency> dependencies) {
+        // IndexedNodeType relatedIndexedNodeType = csarRepoSearchService.getRequiredElementInDependencies(IndexedNodeType.class, nodeTemplate.getType(),
+        // dependencies);
+        return isRequirementUpperBoundReachedForSource(nodeTemplate, requirementName, new IToscaElementFinder() {
+
+            @Override
+            public <T extends IndexedToscaElement> T findElement(Class<T> elementClass, String elementId) {
+                return csarRepoSearchService.getRequiredElementInDependencies(elementClass, elementId, dependencies);
+            }
+        });
+    }
+
+    public boolean isRequirementUpperBoundReachedForSource(NodeTemplate nodeTemplate, String requirementName, IToscaElementFinder finder) {
+        chekRequirement(requirementName, nodeTemplate);
+
+        IndexedNodeType relatedIndexedNodeType = finder.findElement(IndexedNodeType.class, nodeTemplate.getType());
+
         if (nodeTemplate.getRelationships() == null || nodeTemplate.getRelationships().isEmpty()) {
             return false;
         }
+        Requirement requirement = nodeTemplate.getRequirements().get(requirementName);
 
-        RequirementDefinition requirementDefinition = getRequirementDefinition(relatedIndexedNodeType.getRequirements(), requirementName, requirement.getType());
+        RequirementDefinition requirementDefinition = getRequirementDefinition(relatedIndexedNodeType.getRequirements(), requirementName,
+                requirement.getType());
 
         if (requirementDefinition.getUpperBound() == Integer.MAX_VALUE) {
             return false;
@@ -130,5 +144,12 @@ public class TopologyRequirementBoundsValidationServices {
             }
         }
         throw new NotFoundException("Requirement definition [" + requirementName + ":" + requirementType + "] cannot be found");
+    }
+
+    private void chekRequirement(String requirementName, NodeTemplate nodeTemplate) {
+        if (MapUtils.isEmpty(nodeTemplate.getRequirements()) || !nodeTemplate.getRequirements().containsKey(requirementName)) {
+            throw new NotFoundException(
+                    "A requirement with name [" + requirementName + "] cannot be found in the target node [" + nodeTemplate.getName() + "].");
+        }
     }
 }

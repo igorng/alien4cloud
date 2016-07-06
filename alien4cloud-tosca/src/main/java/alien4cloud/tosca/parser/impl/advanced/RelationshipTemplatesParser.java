@@ -1,32 +1,42 @@
 package alien4cloud.tosca.parser.impl.advanced;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.annotation.Resource;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
-import org.yaml.snakeyaml.nodes.*;
-
-import com.google.common.collect.Maps;
-
 import alien4cloud.component.ICSARRepositorySearchService;
-import alien4cloud.model.components.*;
+import alien4cloud.model.components.AbstractPropertyValue;
+import alien4cloud.model.components.IndexedModelUtils;
+import alien4cloud.model.components.IndexedNodeType;
+import alien4cloud.model.components.IndexedRelationshipType;
+import alien4cloud.model.components.Interface;
+import alien4cloud.model.components.RequirementDefinition;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.parser.*;
+import alien4cloud.tosca.parser.INodeParser;
+import alien4cloud.tosca.parser.ParserUtils;
+import alien4cloud.tosca.parser.ParsingContextExecution;
+import alien4cloud.tosca.parser.ParsingError;
+import alien4cloud.tosca.parser.ParsingErrorLevel;
+import alien4cloud.tosca.parser.ToscaParsingUtil;
 import alien4cloud.tosca.parser.impl.ErrorCode;
 import alien4cloud.tosca.parser.impl.base.MapParser;
 import alien4cloud.tosca.parser.impl.base.ScalarParser;
 import alien4cloud.tosca.parser.mapping.DefaultDeferredParser;
 import alien4cloud.tosca.topology.NodeTemplateBuilder;
+import com.google.common.collect.Maps;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
+import org.yaml.snakeyaml.nodes.MappingNode;
+import org.yaml.snakeyaml.nodes.Node;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.ScalarNode;
+import org.yaml.snakeyaml.nodes.SequenceNode;
 
 @Component
 @Slf4j
@@ -135,7 +145,7 @@ public class RelationshipTemplatesParser extends DefaultDeferredParser<Map<Strin
             key += attempCount;
         }
         if (map.containsKey(key)) {
-            addRelationshipTemplateToMap(map, name, relationshipTemplate, attempCount++);
+            addRelationshipTemplateToMap(map, name, relationshipTemplate, ++attempCount);
         } else {
             map.put(key, relationshipTemplate);
         }

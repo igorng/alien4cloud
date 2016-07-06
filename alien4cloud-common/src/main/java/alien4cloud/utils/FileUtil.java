@@ -1,5 +1,9 @@
 package alien4cloud.utils;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
@@ -17,21 +21,16 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 
 @Slf4j
 public final class FileUtil {
@@ -299,5 +298,36 @@ public final class FileUtil {
             }
         });
         return files;
+    }
+
+    @SneakyThrows({ Exception.class })
+    public static String getSHA1Checksum(Path path) {
+        if (!Files.exists(path)) {
+            throw new FileNotFoundException("File not found " + path);
+        }
+        byte[] b = createSHA1Checksum(path);
+        String result = "";
+        for (int i = 0; i < b.length; i++) {
+            result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        return result;
+    }
+
+    private static byte[] createSHA1Checksum(Path path) throws Exception {
+        InputStream fis = Files.newInputStream(path);
+        try {
+            byte[] buffer = new byte[1024];
+            MessageDigest complete = MessageDigest.getInstance("SHA1");
+            int numRead;
+            do {
+                numRead = fis.read(buffer);
+                if (numRead > 0) {
+                    complete.update(buffer, 0, numRead);
+                }
+            } while (numRead != -1);
+            return complete.digest();
+        } finally {
+            Closeables.close(fis, true);
+        }
     }
 }

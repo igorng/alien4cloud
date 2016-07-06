@@ -1,19 +1,17 @@
 package alien4cloud.tosca.container;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import alien4cloud.csar.services.ICsarDependencyLoader;
 import alien4cloud.exception.NotFoundException;
 import alien4cloud.model.components.CSARDependency;
 import alien4cloud.utils.VersionUtil;
-
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Setter
@@ -66,8 +64,8 @@ public class ToscaTypeLoader {
                 typeUsagesMap.put(type, currentUsageCount - 1);
             }
         } else {
-            log.error("Unload a type which is not used [" + type + "]");
-            throw new NotFoundException("Remove a type which is not used [" + type + "]");
+            log.error("Tried to Unload a type which is not used [" + type + "]");
+            throw new NotFoundException("Tried to unload a type which is not used [" + type + "]");
         }
         if (log.isDebugEnabled()) {
             log.debug("Type usage [" + typeUsagesMap + "]");
@@ -102,8 +100,7 @@ public class ToscaTypeLoader {
             log.warn("Version conflicting for archive [" + dependency.getName() + "] override current version [" + currentDependency.getVersion() + "] with ["
                     + dependency.getVersion() + "]");
         } else {
-            log.warn("Version conflicting for archive [" + dependency.getName() + "] do not override and use current version ["
-                    + currentDependency.getVersion()
+            log.warn("Version conflicting for archive [" + dependency.getName() + "] do not override and use current version [" + currentDependency.getVersion()
                     + "] ignore old version [" + dependency.getVersion() + "]");
             dependenciesMap.get(currentDependency).add(type);
         }
@@ -130,6 +127,9 @@ public class ToscaTypeLoader {
         typeUsagesMap.put(type, currentUsageCount + 1);
         if (typesLoadedByDependency != null) {
             typesLoadedByDependency.add(type);
+            // make sure we replace the key it because the Equals on CSARDependency is only based on the name and the version
+            dependenciesMap.remove(directDependency);
+            dependenciesMap.put(directDependency, typesLoadedByDependency);
         } else {
             addNewDependency(directDependency, type);
         }

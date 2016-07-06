@@ -1,11 +1,5 @@
 package alien4cloud.tosca.parser.impl.advanced;
 
-import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.yaml.snakeyaml.nodes.Node;
-
 import alien4cloud.model.components.CSARDependency;
 import alien4cloud.model.components.Csar;
 import alien4cloud.paas.exception.NotSupportedException;
@@ -16,6 +10,10 @@ import alien4cloud.tosca.parser.ParsingErrorLevel;
 import alien4cloud.tosca.parser.impl.ErrorCode;
 import alien4cloud.tosca.parser.impl.base.ScalarParser;
 import alien4cloud.tosca.parser.mapping.DefaultParser;
+import javax.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.yaml.snakeyaml.nodes.Node;
 
 @Slf4j
 @Component
@@ -40,6 +38,7 @@ public class ImportParser extends DefaultParser<CSARDependency> {
                     context.getParsingErrors().add(new ParsingError(ParsingErrorLevel.WARNING, ErrorCode.MISSING_DEPENDENCY, "Import definition is not valid",
                             node.getStartMark(), "Specified dependency is not found in Alien 4 Cloud repository.", node.getEndMark(), valueAsString));
                 } else {
+                    dependency.setLastParsedHash(csar.getLastParsedHash());
                     ToscaContext.get().addDependency(dependency);
                 }
                 return dependency;

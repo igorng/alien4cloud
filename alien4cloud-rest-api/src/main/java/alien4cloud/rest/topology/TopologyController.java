@@ -1,34 +1,5 @@
 package alien4cloud.rest.topology;
 
-import io.swagger.annotations.ApiOperation;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import javax.validation.Valid;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import alien4cloud.application.ApplicationVersionService;
 import alien4cloud.application.TopologyCompositionService;
 import alien4cloud.component.CSARRepositorySearchService;
@@ -53,7 +24,6 @@ import alien4cloud.model.topology.HaPolicy;
 import alien4cloud.model.topology.NodeGroup;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
-import alien4cloud.model.topology.SubstitutionTarget;
 import alien4cloud.model.topology.Topology;
 import alien4cloud.paas.plan.TopologyTreeBuilderService;
 import alien4cloud.paas.wf.WorkflowsBuilderService;
@@ -80,11 +50,34 @@ import alien4cloud.utils.InputArtifactUtil;
 import alien4cloud.utils.RestConstraintValidator;
 import alien4cloud.utils.services.DependencyService.TopologyDependencyContext;
 import alien4cloud.utils.services.PropertyService;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
+import io.swagger.annotations.ApiOperation;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -113,13 +106,13 @@ public class TopologyController {
     private TopologyRequirementBoundsValidationServices topologyRequirementBoundsValidationServices;
 
     @Resource
-    private TopologyServiceCore topologyServiceCore;
+    public TopologyServiceCore topologyServiceCore;
 
     @Resource
     private TopologyTreeBuilderService topologyTreeBuilderService;
 
     @Resource
-    private IFileRepository artifactRepository;
+    public IFileRepository artifactRepository;
 
     @Resource
     private ApplicationVersionService applicationVersionService;
@@ -131,7 +124,7 @@ public class TopologyController {
     private TopologyCompositionService topologyCompositionService;
 
     @Resource
-    private WorkflowsBuilderService workflowBuilderService;
+    public WorkflowsBuilderService workflowBuilderService;
 
     /**
      * Retrieve an existing {@link alien4cloud.model.topology.Topology}
@@ -333,18 +326,6 @@ public class TopologyController {
     }
 
     /**
-     * Remove a nodeTemplate outputs in a topology
-     */
-    private void removeOutputs(String nodeTemplateName, Topology topology) {
-        if (topology.getOutputProperties() != null) {
-            topology.getOutputProperties().remove(nodeTemplateName);
-        }
-        if (topology.getOutputAttributes() != null) {
-            topology.getOutputAttributes().remove(nodeTemplateName);
-        }
-    }
-
-    /**
      * Delete a node template from a topology
      *
      * @param topologyId Id of the topology from which to delete the node template.
@@ -360,57 +341,8 @@ public class TopologyController {
         topologyService.throwsErrorIfReleased(topology);
 
         log.debug("Removing the Node template <{}> from the topology <{}> .", nodeTemplateName, topology.getId());
-
-        Map<String, NodeTemplate> nodeTemplates = TopologyServiceCore.getNodeTemplates(topology);
-
-        NodeTemplate template = TopologyServiceCore.getNodeTemplate(topologyId, nodeTemplateName, nodeTemplates);
-        // Clean up internal repository
-        Map<String, DeploymentArtifact> artifacts = template.getArtifacts();
-        if (artifacts != null) {
-            for (Map.Entry<String, DeploymentArtifact> artifactEntry : artifacts.entrySet()) {
-                DeploymentArtifact artifact = artifactEntry.getValue();
-                if (ArtifactRepositoryConstants.ALIEN_ARTIFACT_REPOSITORY.equals(artifact.getArtifactRepository())) {
-                    this.artifactRepository.deleteFile(artifact.getArtifactRef());
-                }
-            }
-        }
-        List<String> typesTobeUnloaded = Lists.newArrayList();
-        // Clean up dependencies of the topology
-        typesTobeUnloaded.add(template.getType());
-        if (template.getRelationships() != null) {
-            for (RelationshipTemplate relationshipTemplate : template.getRelationships().values()) {
-                typesTobeUnloaded.add(relationshipTemplate.getType());
-            }
-        }
-        topologyService.unloadType(topology, typesTobeUnloaded.toArray(new String[typesTobeUnloaded.size()]));
-        removeRelationShipReferences(nodeTemplateName, topology);
-        nodeTemplates.remove(nodeTemplateName);
-        removeOutputs(nodeTemplateName, topology);
-        if (topology.getSubstitutionMapping() != null) {
-            removeNodeTemplateSubstitutionTargetMapEntry(nodeTemplateName, topology.getSubstitutionMapping().getCapabilities());
-            removeNodeTemplateSubstitutionTargetMapEntry(nodeTemplateName, topology.getSubstitutionMapping().getRequirements());
-        }
-
-        // group members removal
-        TopologyUtils.updateGroupMembers(topology, template, nodeTemplateName, null);
-        // update the workflows
-        workflowBuilderService.removeNode(topology, nodeTemplateName, template);
-        topologyServiceCore.save(topology);
-        topologyServiceCore.updateSubstitutionType(topology);
+        topologyService.removeNodeTemplate(nodeTemplateName, topology);
         return RestResponseBuilder.<TopologyDTO> builder().data(topologyService.buildTopologyDTO(topology)).build();
-    }
-
-    private void removeNodeTemplateSubstitutionTargetMapEntry(String nodeTemplateName, Map<String, SubstitutionTarget> substitutionTargets) {
-        if (substitutionTargets == null) {
-            return;
-        }
-        Iterator<Entry<String, SubstitutionTarget>> capabilities = substitutionTargets.entrySet().iterator();
-        while (capabilities.hasNext()) {
-            Entry<String, SubstitutionTarget> e = capabilities.next();
-            if (e.getValue().getNodeTemplateName().equals(nodeTemplateName)) {
-                capabilities.remove();
-            }
-        }
     }
 
     /**
@@ -491,8 +423,8 @@ public class TopologyController {
 
         try {
             propertyService.setPropertyValue(relationships.get(relationshipName).getProperties(),
-                    relationshipTypes.get(relationshipType).getProperties().get(propertyName), propertyName, propertyValue, new TopologyDependencyContext(
-                            topology));
+                    relationshipTypes.get(relationshipType).getProperties().get(propertyName), propertyName, propertyValue,
+                    new TopologyDependencyContext(topology));
         } catch (ConstraintValueDoNotMatchPropertyTypeException | ConstraintViolationException e) {
             return RestConstraintValidator.fromException(e, propertyName, propertyValue);
         }
@@ -537,9 +469,9 @@ public class TopologyController {
         Map<String, Capability> capabilities = nodeTemplate.getCapabilities();
 
         try {
-            propertyService
-                    .setPropertyValue(capabilities.get(capabilityId).getProperties(), capabilityTypes.get(capabilityType).getProperties().get(propertyName),
-                            propertyName, propertyValue, new TopologyDependencyContext(topology));
+            propertyService.setPropertyValue(capabilities.get(capabilityId).getProperties(),
+                    capabilityTypes.get(capabilityType).getProperties().get(propertyName), propertyName, propertyValue,
+                    new TopologyDependencyContext(topology));
         } catch (ConstraintValueDoNotMatchPropertyTypeException | ConstraintViolationException e) {
             return RestConstraintValidator.fromException(e, propertyName, propertyValue);
         }
@@ -597,37 +529,7 @@ public class TopologyController {
         Topology topology = topologyServiceCore.getOrFail(topologyId);
         topologyService.checkEditionAuthorizations(topology);
 
-        IndexedNodeType indexedNodeType = findIndexedNodeType(nodeTemplateRequest.getIndexedNodeTypeId());
-
-        // Retrieve existing node template
-        Map<String, NodeTemplate> nodeTemplates = TopologyServiceCore.getNodeTemplates(topology);
-        NodeTemplate oldNodeTemplate = TopologyServiceCore.getNodeTemplate(topologyId, nodeTemplateName, nodeTemplates);
-        // Load the new type to the topology in order to update its dependencies
-        indexedNodeType = topologyService.loadType(topology, indexedNodeType);
-        // Build the new one
-        NodeTemplate newNodeTemplate = topologyService.buildNodeTemplate(topology.getDependencies(), indexedNodeType, null);
-        newNodeTemplate.setName(nodeTemplateRequest.getName());
-        newNodeTemplate.setRelationships(oldNodeTemplate.getRelationships());
-        // Put the new one in the topology
-        nodeTemplates.put(nodeTemplateRequest.getName(), newNodeTemplate);
-
-        // Unload and remove old node template
-        topologyService.unloadType(topology, oldNodeTemplate.getType());
-        // remove the node from the workflows
-        workflowBuilderService.removeNode(topology, nodeTemplateName, oldNodeTemplate);
-        nodeTemplates.remove(nodeTemplateName);
-        if (topology.getSubstitutionMapping() != null) {
-            removeNodeTemplateSubstitutionTargetMapEntry(nodeTemplateName, topology.getSubstitutionMapping().getCapabilities());
-            removeNodeTemplateSubstitutionTargetMapEntry(nodeTemplateName, topology.getSubstitutionMapping().getRequirements());
-        }
-
-        TopologyUtils.refreshNodeTempNameInRelationships(nodeTemplateName, nodeTemplateRequest.getName(), nodeTemplates);
-        log.debug("Replacing the node template<{}> with <{}> bound to the node type <{}> on the topology <{}> .", nodeTemplateName,
-                nodeTemplateRequest.getName(), nodeTemplateRequest.getIndexedNodeTypeId(), topology.getId());
-        // add the new node to the workflow
-        workflowBuilderService.addNode(workflowBuilderService.buildTopologyContext(topology), nodeTemplateRequest.getName(), newNodeTemplate);
-
-        topologyServiceCore.save(topology);
+        topologyService.replaceNodeTemplate(nodeTemplateName, nodeTemplateRequest.getName(), nodeTemplateRequest.getIndexedNodeTypeId(), topology);
         return RestResponseBuilder.<TopologyDTO> builder().data(topologyService.buildTopologyDTO(topology)).build();
     }
 
@@ -764,41 +666,6 @@ public class TopologyController {
         }
     }
 
-    private Map<String, NodeTemplate> removeRelationShipReferences(String nodeTemplateName, Topology topology) {
-        Map<String, NodeTemplate> nodeTemplates = topology.getNodeTemplates();
-        Map<String, NodeTemplate> impactedNodeTemplates = Maps.newHashMap();
-        List<String> keysToRemove = Lists.newArrayList();
-        for (String key : nodeTemplates.keySet()) {
-            NodeTemplate nodeTemp = nodeTemplates.get(key);
-            if (nodeTemp.getRelationships() == null) {
-                continue;
-            }
-            keysToRemove.clear();
-            for (String key2 : nodeTemp.getRelationships().keySet()) {
-                RelationshipTemplate relTemp = nodeTemp.getRelationships().get(key2);
-                if (relTemp == null) {
-                    continue;
-                }
-                if (relTemp.getTarget() != null && relTemp.getTarget().equals(nodeTemplateName)) {
-                    keysToRemove.add(key2);
-                }
-            }
-            for (String relName : keysToRemove) {
-                nodeTemplates.get(key).getRelationships().remove(relName);
-                impactedNodeTemplates.put(key, nodeTemplates.get(key));
-            }
-        }
-        return impactedNodeTemplates.isEmpty() ? null : impactedNodeTemplates;
-    }
-
-    private IndexedNodeType findIndexedNodeType(final String indexedNodeTypeId) {
-        IndexedNodeType indexedNodeType = alienDAO.findById(IndexedNodeType.class, indexedNodeTypeId);
-        if (indexedNodeType == null) {
-            throw new NotFoundException("Indexed Node Type [" + indexedNodeTypeId + "] cannot be found");
-        }
-        return indexedNodeType;
-    }
-
     /**
      * Delete a {@link RelationshipTemplate} from a {@link NodeTemplate} in a {@link Topology}.
      *
@@ -816,21 +683,7 @@ public class TopologyController {
         topologyService.checkEditionAuthorizations(topology);
         topologyService.throwsErrorIfReleased(topology);
 
-        Map<String, NodeTemplate> nodeTemplates = TopologyServiceCore.getNodeTemplates(topology);
-
-        NodeTemplate template = TopologyServiceCore.getNodeTemplate(topologyId, nodeTemplateName, nodeTemplates);
-        log.debug("Removing the Relationship template <" + relationshipName + "> from the Node template <" + nodeTemplateName + ">, Topology <"
-                + topology.getId() + "> .");
-        RelationshipTemplate relationshipTemplate = template.getRelationships().get(relationshipName);
-        if (relationshipTemplate != null) {
-            topologyService.unloadType(topology, relationshipTemplate.getType());
-            template.getRelationships().remove(relationshipName);
-        } else {
-            throw new NotFoundException("The relationship with name [" + relationshipName + "] do not exist for the node [" + nodeTemplateName
-                    + "] of the topology [" + topologyId + "]");
-        }
-        workflowBuilderService.removeRelationship(topology, nodeTemplateName, relationshipName, relationshipTemplate);
-        topologyServiceCore.save(topology);
+        topologyService.removeRelationship(nodeTemplateName, relationshipName, topology);
         return RestResponseBuilder.<TopologyDTO> builder().data(topologyService.buildTopologyDTO(topology)).build();
     }
 
@@ -1343,5 +1196,29 @@ public class TopologyController {
             throw new NotFoundException("No version found for topology " + topologyId);
         }
         return RestResponseBuilder.<AbstractTopologyVersion> builder().data(version).build();
+    }
+
+    @ApiOperation(value = "Clear (empty) a topology.", notes = "Returns a topology with it's details. Application role required [ APPLICATION_MANAGER | APPLICATION_DEVOPS ]")
+    @RequestMapping(value = "/{topologyId:.+}/clear", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("isAuthenticated()")
+    public RestResponse<TopologyDTO> clearTopology(@PathVariable String topologyId) {
+        Topology topology = topologyServiceCore.getOrFail(topologyId);
+        topologyService.checkEditionAuthorizations(topology);
+        topologyService.throwsErrorIfReleased(topology);
+        Topology emptyTopology = createEmptyTopology(topology.getId(), topology.getDelegateId(), topology.getDelegateType());
+        topologyServiceCore.save(emptyTopology);
+        return RestResponseBuilder.<TopologyDTO> builder().data(topologyService.buildTopologyDTO(emptyTopology)).build();
+    }
+
+    private Topology createEmptyTopology(String id, String delegateId, String delegateType) {
+        Topology topology = new Topology();
+        topology.setDelegateId(delegateId);
+        topology.setDelegateType(delegateType);
+        if (StringUtils.isNotBlank(id)) {
+            topology.setId(id);
+        } else {
+            topology.setId(UUID.randomUUID().toString());
+        }
+        return topology;
     }
 }

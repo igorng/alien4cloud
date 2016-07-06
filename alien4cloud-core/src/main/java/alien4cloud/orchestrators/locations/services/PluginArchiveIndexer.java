@@ -1,20 +1,5 @@
 package alien4cloud.orchestrators.locations.services;
 
-import java.util.*;
-
-import javax.annotation.Resource;
-import javax.inject.Inject;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import alien4cloud.component.ICSARRepositoryIndexerService;
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.csar.services.CsarService;
@@ -23,7 +8,11 @@ import alien4cloud.events.LocationArchiveDeleteRequested;
 import alien4cloud.events.LocationTypeIndexed;
 import alien4cloud.model.common.Tag;
 import alien4cloud.model.common.Usage;
-import alien4cloud.model.components.*;
+import alien4cloud.model.components.CSARDependency;
+import alien4cloud.model.components.CSARSource;
+import alien4cloud.model.components.Csar;
+import alien4cloud.model.components.IndexedNodeType;
+import alien4cloud.model.components.IndexedToscaElement;
 import alien4cloud.model.orchestrators.Orchestrator;
 import alien4cloud.model.orchestrators.locations.Location;
 import alien4cloud.orchestrators.plugin.ILocationConfiguratorPlugin;
@@ -36,7 +25,22 @@ import alien4cloud.paas.exception.OrchestratorDisabledException;
 import alien4cloud.tosca.ArchiveIndexer;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingError;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.Resource;
+import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 /**
  * Manage the indexing of TOSCA archives.
@@ -82,15 +86,19 @@ public class PluginArchiveIndexer {
         for (PluginArchive pluginArchive : pluginArchives) {
             ArchiveRoot archive = pluginArchive.getArchive();
             Csar csar = csarService.getIfExists(archive.getArchive().getName(), archive.getArchive().getVersion());
+            String lastParsedHash = null;
 
             if (csar == null) {
                 // index the required archive
                 indexArchive(pluginArchive, orchestrator, location);
+                lastParsedHash = archive.getArchive().getLastParsedHash();
+            } else {
+                lastParsedHash = csar.getLastParsedHash();
             }
             if (archive.getArchive().getDependencies() != null) {
                 dependencies.addAll(archive.getArchive().getDependencies());
             }
-            dependencies.add(new CSARDependency(archive.getArchive().getName(), archive.getArchive().getVersion()));
+            dependencies.add(new CSARDependency(archive.getArchive().getName(), archive.getArchive().getVersion(), lastParsedHash));
         }
 
         return dependencies;

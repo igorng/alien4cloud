@@ -103,7 +103,7 @@ public class CSARRepositorySearchService implements ICSARRepositorySearchService
         T element = getElementInDependencies(elementClass, elementId, dependencies);
         if (element == null) {
             throw new NotFoundException(
-                    "Element elementId: <" + elementId + "> of type <" + elementClass.getSimpleName() + "> cannot be found in dependencies " + dependencies);
+                    "Element elementId (" + elementId + ") of type (" + elementClass.getSimpleName() + ") cannot be found in dependencies " + dependencies);
         }
         return element;
     }

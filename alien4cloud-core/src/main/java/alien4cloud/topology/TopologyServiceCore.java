@@ -1,31 +1,44 @@
 package alien4cloud.topology;
 
-import java.util.*;
-import java.util.Map.Entry;
-
-import javax.annotation.Resource;
-
-import org.elasticsearch.common.collect.Lists;
-import org.elasticsearch.common.collect.Sets;
-import org.springframework.stereotype.Service;
-
-import com.google.common.collect.Maps;
-
 import alien4cloud.component.ICSARRepositoryIndexerService;
 import alien4cloud.component.ICSARRepositorySearchService;
-import alien4cloud.component.IToscaElementFinder;
 import alien4cloud.csar.services.CsarService;
 import alien4cloud.dao.IGenericSearchDAO;
 import alien4cloud.dao.model.GetMultipleDataResult;
 import alien4cloud.exception.NotFoundException;
-import alien4cloud.model.components.*;
+import alien4cloud.model.components.CSARDependency;
+import alien4cloud.model.components.CSARSource;
+import alien4cloud.model.components.CapabilityDefinition;
+import alien4cloud.model.components.Csar;
+import alien4cloud.model.components.IValue;
+import alien4cloud.model.components.IndexedCapabilityType;
+import alien4cloud.model.components.IndexedModelUtils;
+import alien4cloud.model.components.IndexedNodeType;
+import alien4cloud.model.components.IndexedRelationshipType;
+import alien4cloud.model.components.PropertyDefinition;
+import alien4cloud.model.components.RequirementDefinition;
 import alien4cloud.model.templates.TopologyTemplate;
 import alien4cloud.model.templates.TopologyTemplateVersion;
-import alien4cloud.model.topology.*;
+import alien4cloud.model.topology.Capability;
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.model.topology.RelationshipTemplate;
+import alien4cloud.model.topology.SubstitutionTarget;
+import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.context.ToscaContextual;
 import alien4cloud.tosca.topology.NodeTemplateBuilder;
 import alien4cloud.utils.MapUtil;
+import com.google.common.collect.Maps;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.common.collect.Lists;
+import org.elasticsearch.common.collect.Sets;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -419,5 +432,4 @@ public class TopologyServiceCore {
         }
         indexerService.indexInheritableElement(csar.getName(), csar.getVersion(), topologyTemplateType, inheritanceDependencies);
     }
-
 }
