@@ -49,12 +49,13 @@
               </td>
               <td>
                 <div class="pull-right">
-                  <a ng-click="enable(plugin.id)" ng-if="!plugin.enabled" class="btn btn-success btn-sm" uib-tooltip="{{ 'PLUGINS.ENABLE' | translate}}"
-                     tooltip-append-to-body="true"> <i class="fa fa-circle fa-fw"></i>
-                  </a>
-                  <a ng-click="disable(plugin.id)" ng-if="plugin.enabled" class="btn btn-danger btn-sm" uib-tooltip="{{ 'PLUGINS.DISABLE' | translate}}"
-                     tooltip-append-to-body="true"> <i class="fa fa-circle"></i>
-                  </a>
+                  <div class="switch vertical-center" ng-click="toggleState(plugin)"
+                    uib-tooltip="{{ plugin.enabled ? 'PLUGINS.DISABLE' : 'PLUGINS.ENABLE' | translate}}"
+                    tooltip-append-to-body="true">
+                    <div class="switch-slider"
+                      ng-class="plugin.enabled ? 'enabled' : 'disabled'"></div>
+                  </div>
+
                   <a id='plugin_{{plugin.id}}_configure' ng-click="openConfiguration(plugin.id)" ng-if="plugin.configurable" class="btn btn-default btn-sm"
                      uib-tooltip="{{ 'PLUGINS.CONFIGURE' | translate}}" tooltip-append-to-body="true">
                     <i class="fa fa-cog"></i>
